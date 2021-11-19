@@ -1,4 +1,5 @@
-const mysql = require('mysql2');
+// const mysql = require('mysql2');
+const { Pool } = require('pg')
 
 // const config = {
 //     host: 'localhost',
@@ -6,15 +7,18 @@ const mysql = require('mysql2');
 //     password: 'root',
 //     database: 'library-db',
 // };
-require('dotenv').config();
+
 
 const config = {
     host: process.env.host,
     user: process.env.user,
     password: process.env.password,
     database: process.env.database,
+    port: process.env.dbport,
+    ssl: true
 }
 
-const pool = mysql.createPool(config);
+// const pool = mysql.createPool(config);
+const pool = new Pool(config);
 
 module.exports = pool;
