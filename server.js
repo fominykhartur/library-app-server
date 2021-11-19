@@ -10,7 +10,7 @@ const app = express();
 app.use(cors());
 
 var corsOptions = {
-  origin: process.env.cors_origin
+  origin: ["http://localhost:3000", "https://fominykh-library-app-frontend.herokuapp.com/"]
 };
 
 app.use(cors(corsOptions));
