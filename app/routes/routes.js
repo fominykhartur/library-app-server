@@ -3,7 +3,7 @@ const pool = require('../data/config');
 const router = app => {
     app.get('/', (request, response) => {
         response.send({
-            message: 'Сервер библиотеки запущен'
+            message: 'Сервер 2.0 библиотеки запущен'
         });
     });
 
@@ -11,6 +11,12 @@ const router = app => {
         pool.query('select * from books', (error, result) => {
             if (error) throw error;
             response.send(result);
+        });
+    });
+
+    app.get('/ping', (request, response) => {
+        response.send({
+            message: 'pong'
         });
     });
 
