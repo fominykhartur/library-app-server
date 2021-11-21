@@ -43,7 +43,6 @@ const router = app => {
                     { header: 'Автор', key: 'author' },
                     { header: 'Название', key: 'name' },
                     { header: 'Статус', key: 'status' },];
-                    console.log(categorie)
                     result.rows.map(item => {
                         if (item.categorie_name !== categorie){
                             return;
@@ -52,7 +51,6 @@ const router = app => {
                                            author: item.author, 
                                            name: item.name,
                                            status: item.status === 1 ? '+' : '' });
-                        console.log(item)
                     })
                 }
                 response.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
