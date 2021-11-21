@@ -1,4 +1,6 @@
 const pool = require('../data/config');
+const Excel = require('exceljs');
+
 
 const router = app => {
     app.get('/', (request, response) => {
@@ -25,6 +27,43 @@ const router = app => {
             if (error) throw error;
             response.send(result.rows);
         });
+    });
+
+    app.get('/exportBooks', (request, response) => {
+        pool.query('select subcycle, author, books.name, status, categories.name as categorie_name \
+            from "library-db".books, "library-db".categories \
+            where cast ("library-db".books.categoria as numeric) = "library-db".categories.id', (error, result) => {
+                if (error) throw error;
+                const categories = new Set(result.rows.map(item => item.categorie_name));
+                var workbook = new Excel.Workbook();
+                for (categorie of categories.values()){
+                    var worksheet = workbook.addWorksheet(categorie);
+                    worksheet.columns = [
+                    { header: 'Подцикл', key: 'subcycle' },
+                    { header: 'Автор', key: 'author' },
+                    { header: 'Название', key: 'name' },
+                    { header: 'Статус', key: 'status' },];
+                    console.log(categorie)
+                    result.rows.map(item => {
+                        if (item.categorie_name !== categorie){
+                            return;
+                        }
+                        worksheet.addRow({ subcycle: item.subcycle, 
+                                           author: item.author, 
+                                           name: item.name,
+                                           status: item.status === 1 ? '+' : '' });
+                        console.log(item)
+                    })
+                }
+                response.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                response.setHeader("Content-Disposition", "attachment; filename=" + "Books.xlsx");
+                workbook.xlsx.write(response)
+                .then(function (data) {
+                    response.end();
+                    console.log('БД экспортирована удачно');
+                });
+                
+            })
     });
 
     app.post('/updateStatus', (request, response) => {
