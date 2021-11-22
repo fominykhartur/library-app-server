@@ -114,7 +114,7 @@ const router = app => {
                     });
                   }
                 });
-                return response.status(200).end();
+                response.end();
             });
 
 
