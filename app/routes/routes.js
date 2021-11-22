@@ -1,6 +1,9 @@
 const pool = require('../data/config');
 const Excel = require('exceljs');
-
+const fs = require('fs');
+const archiver = require('archiver');
+const officegen = require('officegen');
+const path = require('path');
 
 const router = app => {
     app.get('/', (request, response) => {
@@ -63,6 +66,61 @@ const router = app => {
                 
             })
     });
+
+    app.get('/exportWord', (request, response) => {
+        pool.query('select subcycle, author, books.name, status, categories.name as categorie_name \
+            from "library-db".books, "library-db".categories \
+            where cast ("library-db".books.categoria as numeric) = "library-db".categories.id', (error, result) => {
+            if (error) throw error;
+            const categories = new Set(result.rows.map(item => item.categorie_name));
+
+            response.attachment('serverFiles/Books.zip');
+            let our;
+            for (categorie of categories){
+                out = fs.createWriteStream(`serverFiles/Words/${categorie}.docx`);
+                docx = officegen('docx');
+
+                result.rows.map(item => {
+                    if (item.categorie_name !== categorie){
+                            return;
+                        }
+                    //1.[Смерть] Терри Пратчетт «Мор, ученик смерти» +
+                    var pObj = docx.createListOfNumbers ();
+                    pObj.addText (`[${item.subcycle}] ${item.author} «${item.name}» ${item.status === 1 ? '+' : ''}`);
+                })
+
+                docx.generate(out);
+
+            }
+
+            out.on('close', function(){
+                var archive = archiver('zip');
+                archive.pipe(response);
+
+                archive.directory('serverFiles/Words/', false);
+
+                archive.finalize();
+            })
+
+            response.on('close', function() {
+                console.log('Архив готов и отправлен успешно');
+                const directory = 'serverFiles/Words/';
+                fs.readdir(directory, (err, files) => {
+                  if (err) throw err;
+
+                  for (const file of files) {
+                    fs.unlink(path.join(directory, file), err => {
+                      if (err) throw err;
+                    });
+                  }
+                });
+                return response.status(200).end();
+            });
+
+
+        });
+    })
+
 
     app.post('/updateStatus', (request, response) => {
         console.log(request.body);
