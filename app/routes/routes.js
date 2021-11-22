@@ -32,7 +32,7 @@ const router = app => {
         });
     });
 
-    app.get('/exportBooks', (request, response) => {
+    app.get('/exportExcel', (request, response) => {
         pool.query('select subcycle, author, books.name, status, categories.name as categorie_name \
             from "library-db".books, "library-db".categories \
             where cast ("library-db".books.categoria as numeric) = "library-db".categories.id', (error, result) => {
