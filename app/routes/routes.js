@@ -1,5 +1,6 @@
 const pool = require('../data/config');
 const Excel = require('exceljs');
+const xlsx = require('xlsx')
 const fs = require('fs');
 const archiver = require('archiver');
 const officegen = require('officegen');
@@ -141,6 +142,20 @@ const router = app => {
             response.send('Updated');
         });
     });
+
+    app.get('/importBooks', (request, response) => {
+        const workbook = xlsx.readFile("C:\\Users\\Admin\\Desktop\\Books.xlsx").then()
+        console.log(workbook.Sheetnames);
+
+        // response.send(workbook)      
+        // pool.query(`INSERT INTO "library-db".books 
+        //             (categoria, subcycle, author, name, status)
+        //             VALUES(1, ''::text, 'Instest 4', 'Instest 4', 0);
+        //             SELECT * FROM "library-db".books;`, (error, result) => {
+        //                 response.send(result);
+        //             });
+
+    })
 }
 
 module.exports = router;
