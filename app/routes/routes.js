@@ -1,6 +1,5 @@
 const pool = require('../data/config');
 const Excel = require('exceljs');
-const xlsx = require('xlsx')
 const fs = require('fs');
 const archiver = require('archiver');
 const officegen = require('officegen');
@@ -143,18 +142,61 @@ const router = app => {
         });
     });
 
-    app.get('/importBooks', (request, response) => {
-        const workbook = xlsx.readFile("C:\\Users\\Admin\\Desktop\\Books.xlsx").then()
-        console.log(workbook.Sheetnames);
+    app.post('/importBooks', (request, response) => {
+        console.log(response.body);
 
-        // response.send(workbook)      
-        // pool.query(`INSERT INTO "library-db".books 
-        //             (categoria, subcycle, author, name, status)
-        //             VALUES(1, ''::text, 'Instest 4', 'Instest 4', 0);
-        //             SELECT * FROM "library-db".books;`, (error, result) => {
-        //                 response.send(result);
-        //             });
+        const insertNewCategory = async(sh, categorieName) => {
+            pool.query(`INSERT INTO "library-db".categories ("name") VALUES('${categorieName}');
+                        SELECT * FROM "library-db".categories;`, (error, res) => {
+                        categories = res[1].rows;
+                        categorieID = categories.filter(item => item.name === categorieName)[0].id;
+                        insertionBooks(sh, categorieID);
+                     });
+        }
 
+        const insertionBooks = (sh, categorieID) => {
+            let dataString = '';
+            for (i = 2; i <= sh.rowCount; i++) {
+                let bookSubcycle = sh.getRow(i).getCell(1).value > 0 ? `'${sh.getRow(i).getCell(1).value}'` : `''::text`;
+                let bookAuthor = sh.getRow(i).getCell(2).value.length > 0 ? `'${sh.getRow(i).getCell(2).value}'` : `''::text`;
+                let bookName = `'${sh.getRow(i).getCell(3).value}'`;
+                let bookStatus = sh.getRow(4).value === '+'? 1 : 0;
+
+                dataString += `(${categorieID}, ${bookSubcycle}, ${bookAuthor}, ${bookName}, ${bookStatus}),`
+            }
+            dataString = dataString.slice(0, -1);     
+
+            pool.query(`INSERT INTO "library-db".books 
+                        (categoria, subcycle, author, name, status)
+                        VALUES${dataString};
+                        SELECT * FROM "library-db".books;`, (error, result) => {
+                            console.log(`${sh.name} импортирована`);
+                            // console.log(error, result);
+                        });
+        }
+
+        pool.query('select * from "library-db".categories', (error, result) => {
+            let categories = result.rows;
+
+            var wb = new Excel.Workbook();
+            var filePath = "C:\\Users\\Artur\\Desktop\\Books.xlsx";
+
+
+            wb.xlsx.readFile(filePath).then(function(){
+                wb.eachSheet(function(sh, sheeID){
+
+                    let categorieID;
+                    if (categories.filter(item => item.name === sh.name).length > 0){
+                        categorieID = categories.filter(item => item.name === sh.name)[0].id;
+                        insertionBooks(sh, categorieID);
+                    }
+                    else{
+                        insertNewCategory(sh, sh.name)
+                    }
+                });
+            });
+        });
+        response.send('Данные импортированы');
     })
 }
 
